@@ -1,0 +1,71 @@
+html, body {
+    width:  100%;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    background: #00f;
+    color: rgba(255,255,255,0.8)
+}
+
+#controls {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+}
+#moreControls {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+}
+#moreControls div {
+    margin: auto;
+    display: flex;
+    flex: 1;
+}
+#moreControls div button {
+    white-space: nowrap;
+    width: 100%;
+}
+button {
+    padding: 0.5em 0.75em;
+    font-size: 200%;
+    background: rgba(255,255,255,0.667);
+}
+#displayZoom {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 600%;
+    font-family: monospace;
+}
+#displayLayer {
+    position: absolute;
+    top: 80px;
+    right: 10px;
+    font-size: 600%;
+    font-family: monospace;
+}
+#displayMouse {
+    position: absolute;
+    top: 80px;
+    left: 10px;
+    font-size: 400%;
+    font-family: monospace;
+}
+#displayCoord {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    font-size: 400%;
+    font-family: monospace;
+
+}
+#displayPan {
+    position: absolute;
+    top: 150px;
+    left: 10px;
+    font-size: 400%;
+    font-family: monospace;
+
+}
+#zoomFactor {}
