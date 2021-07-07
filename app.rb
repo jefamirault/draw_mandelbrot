@@ -11,36 +11,18 @@ ActiveRecord::Base.establish_connection(
 )
 
 get '/' do
-
-  # params = { focus: [0,0], layer: 1, radius: 3 }
-
-  # tiles = tileset.field_of_view
-
-  # tile includes coord, layer, render_path if available
-
   focus = params[:focus] || [0,0]
   layer = params[:layer] || 1
 
 
-
   center = Tile.at *focus
-  tiles = center.explore_neighbors 3
+  center.explore_neighbors 3
+  tiles = center.connected_tiles(3).map do |coord|
+    Tile.at *coord
+  end
 
 
-  # tiles = [
-  #     {
-  #         coord: [0,0],
-  #         layer: 1,
-  #         render_path: '1234'
-  #     },
-  #     {
-  #         coord: [0,1],
-  #         layer: 1,
-  #         render_path: '1235'
-  #     }
-  # ]
-
-  erb :index, locals: { tiles: params }
+  erb :index, locals: { tiles: tiles }
 end
 
 get '*' do

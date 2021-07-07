@@ -16,36 +16,13 @@
     </canvas>
     <% require 'pry-byebug' %>
     <div id="tiles" style="display: none">
-        <img id="0" src="..\map\layer_1/tiles/0.png" width="200" height="200">
-        <img id="1" src="..\map\layer_1/tiles/1.png" width="200" height="200">
-        <img id="2" src="..\map\layer_1/tiles/2.png" width="200" height="200">
-        <img id="3" src="..\map\layer_1/tiles/3.png" width="200" height="200">
-        <img id="4" src="..\map\layer_1/tiles/4.png" width="200" height="200">
-        <img id="5" src="..\map\layer_1/tiles/5.png" width="200" height="200">
-        <img id="6" src="..\map\layer_1/tiles/6.png" width="200" height="200">
-        <img id="7" src="..\map\layer_1/tiles/7.png" width="200" height="200">
-        <img id="8" src="..\map\layer_1/tiles/8.png" width="200" height="200">
-        <img id="9" src="..\map\layer_1/tiles/9.png" width="200" height="200">
-        <img id="10" src="..\map\layer_1/tiles/10.png" width="200" height="200">
-        <img id="11" src="map\layer_1/tiles/11.png" width="200" height="200">
-        <img id="12" src="..\map\layer_1/tiles/12.png" width="200" height="200">
-        <img id="13" src="..\map\layer_1/tiles/13.png" width="200" height="200">
-        <img id="14" src="..\map\layer_1/tiles/14.png" width="200" height="200">
-        <img id="15" src="..\map\layer_1/tiles/15.png" width="200" height="200">
-        <img id="16" src="..\map\layer_1/tiles/16.png" width="200" height="200">
-        <img id="17" src="..\map\layer_1/tiles/17.png" width="200" height="200">
-        <img id="18" src="..\map\layer_1/tiles/18.png" width="200" height="200">
-        <img id="19" src="..\map\layer_1/tiles/19.png" width="200" height="200">
-        <img id="20" src="..\map\layer_1/tiles/20.png" width="200" height="200">
-        <img id="21" src="..\map\layer_1/tiles/21.png" width="200" height="200">
-        <img id="22" src="..\map\layer_1/tiles/22.png" width="200" height="200">
-        <img id="23" src="..\map\layer_1/tiles/23.png" width="200" height="200">
-        <img id="24" src="..\map\layer_1/tiles/24.png" width="200" height="200">
+        <% tiles.each do |tile| %>
+            <img id="<%= tile.id %>" src="<%= tile.render_path %>" width="200" height="200">
+        <% end %>
+<!--        <img id="layer_2" src="..\map\layer_2/tiles/13.png" width="200" height="200">-->
 
-        <img id="layer_2" src="..\map\layer_2/tiles/13.png" width="200" height="200">
-
-        <img id="3_0" src="..\map\layer_3/0.png" width="200" height="200">
-        <img id="3_1" src="..\map\layer_3/1.png" width="200" height="200">
+<!--        <img id="3_0" src="..\map\layer_3/0.png" width="200" height="200">-->
+<!--        <img id="3_1" src="..\map\layer_3/1.png" width="200" height="200">-->
     </div>
 
     <div id="displayCoord">Complex Coord: (<span id="coordX">0</span>,<span id="coordY">0</span>)</div>
@@ -83,12 +60,14 @@
 
     // tileWidth = 1 // how much of the complex plane spanned by one tile
     // tiles = [[0, 0, "12"], [0, 1.0, "7"], [1.0, 0, "13"], [0, -1.0, "17"], [-1.0, 0, "11"], [0, 2.0, "14"], [1.0, 1.0, "8"], [2.0, 0], [1.0, -1.0], [0, -2.0], [-1.0, -1.0, "16"], [-1.0, 1.0, "6"], [-2.0, 0, "10"]]
-    tiles = [
-        [0.0,0.0, '12'],
-        [0.0,1.0,'7'], [1.0,0.0,'13'], [0.0,-1.0,'17'], [-1.0,0.0,'11'],
-        [0.0,2.0,'14'], [1.0,1.0,'8'], [2.0,0.0], [1.0,-1.0], [0.0,-2.0], [-1.0,-1.0,'16'], [-2.0,0.0,'10'], [-1.0,1.0,'6'],
-        [0.0,3.0], [1.0,2.0], [2.0,1.0], [3.0,0.0], [2.0,-1.0], [1.0,-2.0], [0.0,-3.0], [-1.0,-2.0], [-2.0,-1.0], [-3.0,0.0], [-2.0,1.0], [-1.0,2.0]
-    ]
+    // tiles = [
+    //     [0.0,0.0, '12'],
+    //     [0.0,1.0,'7'], [1.0,0.0,'13'], [0.0,-1.0,'17'], [-1.0,0.0,'11'],
+    //     [0.0,2.0,'14'], [1.0,1.0,'8'], [2.0,0.0], [1.0,-1.0], [0.0,-2.0], [-1.0,-1.0,'16'], [-2.0,0.0,'10'], [-1.0,1.0,'6'],
+    //     [0.0,3.0], [1.0,2.0], [2.0,1.0], [3.0,0.0], [2.0,-1.0], [1.0,-2.0], [0.0,-3.0], [-1.0,-2.0], [-2.0,-1.0], [-3.0,0.0], [-2.0,1.0], [-1.0,2.0]
+    // ]
+    tiles = <%= tiles.map {|t| [*t.coord, t.id.to_s]} %>
+
     layer_2 = [[0.25, 0.25, "layer_2", 2]]
     layer_3 = [[-0.625, 0.625, "3_0", 3], [-0.375, 0.625, "3_1", 3]]
     // Camera Offset
@@ -395,7 +374,7 @@
     draw();
     window.setTimeout(function(){
         draw();
-    }, 25);
+    }, 1000);
 
 </script>
 </body>

@@ -5,7 +5,10 @@ require "sinatra/activerecord"
 
 class Tile < ActiveRecord::Base
   validates :coordA, uniqueness: { scope: :coordB}
-  belongs_to :parent
+  belongs_to :parent, class_name: 'Tile', foreign_key: :parent_id
+  has_many :children, class_name: 'Tile', foreign_key: :parent_id
+  validates_length_of :children, maximum: 4
+
 
   # Span of Complex Plane a single tile covers at Layer 1/Zoom 1.0
   TILE_SIZE = 1
@@ -20,7 +23,7 @@ class Tile < ActiveRecord::Base
     TILE_SIZE * 0.5 ** (layer - 1)
   end
 
-  attr_accessor :tileset, :children, :render, :location
+  attr_accessor :tileset, :render, :location
 
   # def initialize(options = {})
   #   options ||= {}
@@ -56,7 +59,11 @@ class Tile < ActiveRecord::Base
   end
 
   def self.at(a, b)
-    Tile.where(coordA: a, coordB: b).first
+    if a == 0 && b == 0
+      Tile.origin
+    else
+      Tile.where(coordA: a, coordB: b).first
+    end
   end
 
   def up
@@ -73,7 +80,7 @@ class Tile < ActiveRecord::Base
   end
 
   def neighbors
-    [up, right, down, left]
+    [up, right, down, left].reject &:nil?
   end
 
   # def up=(tile)
@@ -90,43 +97,67 @@ class Tile < ActiveRecord::Base
   # end
 
   def child(index)
-    children[index]
+    Tile.at *coord_child(index)
   end
 
   def explore_child(index)
-    # return child in O(1) time if previously explored
-    if @children[index] != nil
-      @children[index]
+    current = child index
+    if current
+      current
+    else
+      a, b = coord_child index
+      tile = Tile.new coordA: a, coordB: b, parent: self, layer: self.layer + 1
+      if tile.save
+        tile
+      else
+        raise 'Expected to create new tile but could not'
+      end
     end
-    child = Tile.new(parent: self, tileset: @tileset)
-    x,y = @location
-    offset = child.tile_width / 2.0
-    child_location = case index
-               when 0
-                 [x - offset, y + offset]
-               when 1
-                 [x + offset, y + offset]
-               when 2
-                 [x - offset, y - offset]
-               when 3
-                 [x + offset, y - offset]
-               else
-                 raise 'something went wrong'
-               end
-    child.location = child_location
-    @children[index] = child
   end
 
+  # def explore_child(index)
+  #   # return child in O(1) time if previously explored
+  #   if @children[index] != nil
+  #     @children[index]
+  #   end
+  #   child = Tile.new(parent: self, tileset: @tileset)
+  #   x,y = @location
+  #   offset = child.tile_width / 2.0
+  #   child_location = case index
+  #              when 0
+  #                [x - offset, y + offset]
+  #              when 1
+  #                [x + offset, y + offset]
+  #              when 2
+  #                [x - offset, y - offset]
+  #              when 3
+  #                [x + offset, y - offset]
+  #              else
+  #                raise 'something went wrong'
+  #              end
+  #   child.location = child_location
+  #   @children[index] = child
+  # end
+
   def explore_children
-    (0..3).each do |i|
-      explore_child i
-    end
-    children
+    Set[*(0..3).map {|i| explore_child i }]
   end
 
   def which_child
     return nil if parent.nil?
-    @parent.children.index(self)
+    if coordA < parent.coordA
+      if coordB > parent.coordB
+        0
+      else
+        2
+      end
+    else
+      if coordB > parent.coordB
+        1
+      else
+        3
+      end
+    end
   end
 
   def coord_up
@@ -142,6 +173,22 @@ class Tile < ActiveRecord::Base
     [coordA -  tile_width, coordB]
   end
 
+  def coord_child(index)
+    offset = tile_width / 4.0
+    case index
+    when 0
+      [coordA - offset, coordB + offset]
+    when 1
+      [coordA + offset, coordB + offset]
+    when 2
+      [coordA - offset, coordB - offset]
+    when 3
+      [coordA + offset, coordB - offset]
+    else
+      raise 'child index must be in range [0, 4]'
+    end
+  end
+
   def explore_up
     self.up || Tile.create do |tile|
       tile.coordA, tile.coordB = *coord_up
@@ -149,7 +196,14 @@ class Tile < ActiveRecord::Base
       tile.parent = if self.parent.nil?
                       nil
                     else
-                    #  use which_child to determine parent
+                      case which_child
+                      when 0..1
+                        parent.explore_up
+                      when 2..3
+                        parent
+                      else
+                        raise 'Error: cannot determine child index of parent tile'
+                      end
                     end
     end
   end
@@ -161,7 +215,14 @@ class Tile < ActiveRecord::Base
       tile.parent = if self.parent.nil?
                       nil
                     else
-                      #  use which_child to determine parent
+                      case which_child
+                      when 1,3
+                        parent.explore_right
+                      when 0,2
+                        parent
+                      else
+                        raise 'Error: cannot determine child index of parent tile'
+                      end
                     end
     end
   end
@@ -173,7 +234,14 @@ class Tile < ActiveRecord::Base
       tile.parent = if self.parent.nil?
                       nil
                     else
-                      #  use which_child to determine parent
+                      case which_child
+                      when 0..1
+                        parent
+                      when 2..3
+                        parent.down
+                      else
+                        raise 'Error: cannot determine child index of parent tile'
+                      end
                     end
     end
   end
@@ -185,8 +253,14 @@ class Tile < ActiveRecord::Base
       tile.parent = if self.parent.nil?
                       nil
                     else
-                      #  use which_child to determine parent
-                    end
+                      case which_child
+                      when 0,2
+                        parent.explore_left
+                      when 1,3
+                        parent
+                      else
+                        raise 'Error: cannot determine child index of parent tile'
+                      end                    end
     end
   end
 

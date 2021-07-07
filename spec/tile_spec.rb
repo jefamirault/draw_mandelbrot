@@ -81,4 +81,61 @@ RSpec.describe Tile do
       expect(@origin.connected_tiles 3).to eq connected_3
     end
   end
+
+  context "Explore second layer using Child 0 of Origin as center" do
+    before(:example) do
+      Tile.destroy_all
+      @origin = Tile.origin
+      @center
+    end
+    it 'Explore children of origin' do
+      children = @origin.explore_children.map &:coord
+      children_coord = Set[*children]
+      expected = Set[
+          [0.25,0.25],
+          [0.25,-0.25],
+          [-0.25,0.25],
+          [-0.25,-0.25]
+      ]
+      expect(children_coord).to eq expected
+    end
+    it 'Explore radius around center: (-0.25,0.25), layer 2' do
+      center = @origin.explore_child 0
+      center.explore_neighbors 1
+      # binding.pry
+      expected = []
+      center.explore_neighbors 2
+      expected2 = []
+      center.explore_neighbors 3
+      expected3 = Set[
+          [-0.25, 0.25],
+          [-0.25, 0.75],
+          [0.25, 0.25],
+          [-0.25, -0.25],
+          [-0.75, 0.25],
+          [-0.25, 1.25],
+          [0.25, 0.75],
+          [-0.75, 0.75],
+          [0.75, 0.25],
+          [0.25, -0.25],
+          [-0.25, -0.75],
+          [-0.75, -0.25],
+          [-1.25, 0.25],
+          [-0.25, 1.75],
+          [0.25, 1.25],
+          [-0.75, 1.25],
+          [0.75, 0.75],
+          [-1.25, 0.75],
+          [1.25, 0.25],
+          [0.75, -0.25],
+          [0.25, -0.75],
+          [-0.25, -1.25],
+          [-0.75, -0.75],
+          [-1.25, -0.25],
+          [-1.75, 0.25]
+      ]
+      expect(center.connected_tiles 3).to eq expected3
+    #  check neighbor coords and parent coords
+    end
+  end
 end
