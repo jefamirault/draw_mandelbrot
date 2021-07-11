@@ -1,25 +1,15 @@
-canvas =  document.getElementById("canvas");
-var ctx = canvas.getContext('2d')
-ctx.canvas.width  = window.innerWidth;
-ctx.canvas.height = window.innerHeight;
+// canvas =  document.getElementById("canvas");
+// var ctx = canvas.getContext('2d')
+// ctx.canvas.width  = window.innerWidth;
+// ctx.canvas.height = window.innerHeight;
 
 factor = 1.5 // how much to scale between zoom levels
 zoom = 1.0
 
-// tileWidth = 1 // how much of the complex plane spanned by one tile
-// tiles = [[0, 0, "12"], [0, 1.0, "7"], [1.0, 0, "13"], [0, -1.0, "17"], [-1.0, 0, "11"], [0, 2.0, "14"], [1.0, 1.0, "8"], [2.0, 0], [1.0, -1.0], [0, -2.0], [-1.0, -1.0, "16"], [-1.0, 1.0, "6"], [-2.0, 0, "10"]]
-tiles = [
-    [0.0,0.0, '12'],
-    [0.0,1.0,'7'], [1.0,0.0,'13'], [0.0,-1.0,'17'], [-1.0,0.0,'11'],
-    [0.0,2.0,'14'], [1.0,1.0,'8'], [2.0,0.0], [1.0,-1.0], [0.0,-2.0], [-1.0,-1.0,'16'], [-2.0,0.0,'10'], [-1.0,1.0,'6'],
-    [0.0,3.0], [1.0,2.0], [2.0,1.0], [3.0,0.0], [2.0,-1.0], [1.0,-2.0], [0.0,-3.0], [-1.0,-2.0], [-2.0,-1.0], [-3.0,0.0], [-2.0,1.0], [-1.0,2.0]
-]
-layer_2 = [[0.25, 0.25, "layer_2", 2]]
-layer_3 = [[-0.625, 0.625, "3_0", 3], [-0.375, 0.625, "3_1", 3]]
 // Camera Offset
 // todo this should change when the user pans left/right/up/down
-offsetX = canvas.width / 2
-offsetY = canvas.height / 2
+// offsetX = canvas.width / 2
+// offsetY = canvas.height / 2
 
 
 panY = 0
@@ -51,30 +41,6 @@ function coordAtMouse(mouseX, mouseY) {
     return [x, y]
 }
 
-
-function draw() {
-    clearCanvas()
-
-    width = window.innerWidth;
-    height = window.innerHeight;
-
-    //    call drawTile() on each elem of tiles
-    for (i=0;i<tiles.length;i++) {
-        if (tiles[i][2])
-            paintTile(tiles[i]);
-        drawTile(tiles[i]);
-    }
-    for (i=0;i<layer_2.length;i++) {
-        if (layer_2[i][2])
-            paintTile(layer_2[i]);
-        drawTile(layer_2[i]);
-    }
-    for (i=0;i<layer_3.length;i++) {
-        if (layer_3[i][2])
-            paintTile(layer_3[i]);
-        drawTile(layer_3[i]);
-    }
-}
 
 function drawTile(tile) {
     src = tile[2];
@@ -240,54 +206,36 @@ function clearCanvas() {
 }
 
 // Display Mouse (x,y) position and Complex (ax+bi) Coordinates
-canvas.addEventListener('mousemove', e => {
-    var e = window.event;
-
-    var posX = e.clientX;
-    var posY = e.clientY;
-
-    document.getElementById('mouseX').innerText = posX;
-    document.getElementById('mouseY').innerText = posY;
-
-    precision = 4
-    coord = coordAtMouse(posX, posY);
-    document.getElementById('coordX').innerText = coord[0].toFixed(precision);
-    document.getElementById('coordY').innerText = coord[1].toFixed(precision);
-
-})
+// canvas.addEventListener('mousemove', e => {
+//     var e = window.event;
+//
+//     var posX = e.clientX;
+//     var posY = e.clientY;
+//
+//     document.getElementById('mouseX').innerText = posX;
+//     document.getElementById('mouseY').innerText = posY;
+//
+//     precision = 4
+//     coord = coordAtMouse(posX, posY);
+//     document.getElementById('coordX').innerText = coord[0].toFixed(precision);
+//     document.getElementById('coordY').innerText = coord[1].toFixed(precision);
+//
+// })
 // Trigger zoom with scroll wheel
-canvas.addEventListener('wheel', e => {
-    var e = window.event;
+function mouseControls(canvas) {
+    canvas.addEventListener('wheel', e => {
+        var e = window.event;
 
-    if (event.deltaY < 0)
-        zoomIn();
-    // zoomInMouse();
-    else
-        zoomOut();
-})
+        if (event.deltaY < 0)
+            zoomIn();
+        // zoomInMouse();
+        else
+            zoomOut();
+    })
+}
 
 function panInterval() {
     return 100.0 / zoom;
-}
-
-function pan(deltaX, deltaY) {
-    panX += deltaX;
-    panY += deltaY;
-    ctx.translate(deltaX, deltaY);
-    printPan();
-    draw();
-}
-function panUp() {
-    pan(0, panInterval());
-}
-function panRight() {
-    pan(-panInterval(), 0);
-}
-function panDown() {
-    pan(0, -panInterval());
-}
-function panLeft() {
-    pan(panInterval(), 0);
 }
 
 function printPan() {
@@ -295,29 +243,80 @@ function printPan() {
     document.getElementById('panY').innerText = -panY.toFixed(0);
 }
 // Pan with keyboard
-window.addEventListener('keydown', e => {
-    var e = window.event;
-    switch (e.code) {
-        case "KeyW":
-        case "ArrowUp":
-            panUp();
-            break;
-        case "KeyA":
-        case "ArrowLeft":
-            panLeft();
-            break;
-        case "KeyS":
-        case "ArrowDown":
-            panDown();
-            break;
-        case "KeyD":
-        case "ArrowRight":
-            panRight();
-            break;
-    }
-})
+function keyboardControls(event) {
+    window.addEventListener('keydown', e => {
+        var e = window.event;
+        switch (e.code) {
+            case "KeyW":
+            case "ArrowUp":
+                panUp();
+                break;
+            case "KeyA":
+            case "ArrowLeft":
+                panLeft();
+                break;
+            case "KeyS":
+            case "ArrowDown":
+                panDown();
+                break;
+            case "KeyD":
+            case "ArrowRight":
+                panRight();
+                break;
+        }
+    })
+};
 
-draw();
-window.setTimeout(function(){
-    draw();
-}, 25);
+//
+// function requestTiles() {
+//     var xmlhttp = new XMLHttpRequest();
+//     var newTiles;
+//     xmlhttp.onreadystatechange = function() {
+//         if (xmlhttp.readyState == XMLHttpRequest.DONE) {   // XMLHttpRequest.DONE == 4
+//             if (xmlhttp.status == 200) {
+//                 newTiles = JSON.parse(xmlhttp.responseText)
+//                 // return newTiles;
+//                 registerTiles(newTiles);
+//                 // draw(newTiles)
+//                 // debugger;
+//                 // document.getElementById("myDiv").innerHTML = xmlhttp.responseText;
+//             }
+//             else if (xmlhttp.status == 400) {
+//                 alert('There was an error 400');
+//             }
+//             else {
+//                 alert('something else other than 200 was returned');
+//             }
+//         }
+//     };
+//     // TODO add focus and layer to url parameters GET "/tiles?focus=[0.0,0.0]&layer=1"
+//     xmlhttp.open("GET", "tiles?focus=[-0.25,0.25]&layer=2", true);
+//     // xmlhttp.open("GET", "tiles?focus=[0.0,0.0]&layer=1", true);
+//     xmlhttp.send();
+// }
+
+
+function tileImg(tile) {
+    img = document.createElement('img')
+    img.id = tile[2];
+    img.src = tile[4];
+    img.width = 200;
+    img.height = 200;
+    return img;
+}
+
+function registerTiles(tiles) {
+   for (i=0; i<tiles.length; i++)
+       registerTile(tiles[i]);
+}
+
+function registerTile(tile) {
+    tiles_div = document.getElementById("tiles");
+    img = tileImg(tile);
+    tiles_div.appendChild(img);
+    drawTile(tile);
+    img.onload = function(){
+        paintTile(tile);
+        drawTile(tile);
+    };
+}
