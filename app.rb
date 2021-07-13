@@ -14,10 +14,9 @@ ActiveRecord::Base.establish_connection(
 get '/' do
   focus = params[:focus] ? JSON.parse(params[:focus]) : [0,0]
   layer = params[:layer] || 1
-
-  center = Tile.at *focus
-
-  radius = 4
+  layer = layer.to_i  # convert from string
+  center = Tile.at *focus, layer
+  radius = 6
 
   center.explore_neighbors radius
   tiles = center.connected_tiles(radius).map do |coord|
@@ -31,10 +30,11 @@ end
 get '/tiles' do
   focus = params[:focus] ? JSON.parse(params[:focus]) : [0,0]
   layer = params[:layer] || 1
+  layer = layer.to_i  # convert from string
 
-  center = Tile.at *focus
+  center = Tile.at *focus, layer
 
-  radius = 4
+  radius = 6
 
   center.explore_neighbors radius
   tiles = center.connected_tiles(radius).map do |coord|

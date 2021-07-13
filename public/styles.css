@@ -9,6 +9,11 @@ html, body {
 
 #controls {
     position: absolute;
+    bottom: 90px;
+    left: 10px;
+}
+#debugControls {
+    position: absolute;
     bottom: 10px;
     left: 10px;
 }

@@ -13,7 +13,7 @@ class Tile < ActiveRecord::Base
   # Span of Complex Plane a single tile covers at Layer 1/Zoom 1.0
   TILE_SIZE = 1
   # Rendered Tile Resolution
-  TILE_RESOLUTION = 200
+  TILE_RESOLUTION = 400
 
   def pixel_width
     TILE_SIZE / TILE_RESOLUTION
@@ -22,21 +22,12 @@ class Tile < ActiveRecord::Base
   def tile_width
     TILE_SIZE * 0.5 ** (layer - 1)
   end
+  def self.tile_width(layer)
+    TILE_SIZE * 0.5 ** (layer - 1)
+  end
 
   attr_accessor :tileset, :render, :location
 
-  # def initialize(options = {})
-  #   options ||= {}
-  #   @parent = options[:parent]
-  #   @layer = @parent.nil? ? 1 : @parent.layer+1
-  #   @neighbors = [nil, nil, nil, nil]
-  #   @children = [nil, nil, nil, nil]
-  #   @render = false
-  #   @location = options[:coord] || [nil, nil]
-  #   @tileset = options[:tileset] || Tileset.new
-  # end
-
-  # fix problem with 0.0 != 0 in Sets
   def coord
     [coordA, coordB]
   end
@@ -45,24 +36,60 @@ class Tile < ActiveRecord::Base
     @location[0] == x && @location[1] == y
   end
 
-  def eql?(other_tile)
-    binding.pry
-    @tileset == other_tile.tileset && coord_eq?(*other_tile.coord)
-  end
-
-  # def self.at(x, y)
-  #   Tile.new
-  # end
 
   def self.origin
     Tile.where(coordA: 0, coordB: 0).first || Tile.create(coordA: 0, coordB: 0, layer: 1)
   end
 
-  def self.at(a, b)
+  def self.at(a, b, layer = nil)
     if a == 0 && b == 0
       Tile.origin
     else
-      Tile.where(coordA: a, coordB: b).first
+      exact = Tile.where(coordA: a, coordB: b).first
+      if exact
+        exact
+      elsif layer
+         Tile.nearest(a,b,layer)
+      else
+        nil
+      end
+    end
+  end
+
+  # e.g. round a=5.25068 to nearest n=0.25 => 5.25
+  def self.round_to(a, n, offset = 0)
+    ((a + offset) / n).round * n - offset
+  end
+
+  # Calculate coordinates of nearest tile on layer whether it exists or not.
+  # Explore if it does not exist and return tile
+  def self.nearest(a, b, layer)
+    if layer.nil?
+      raise "Cannot find nearest tile based on inexact coordinates without layer"
+    end
+    w=Tile.tile_width(layer)
+    coord = [a,b].map {|n| Tile.round_to n, w, w/2.0 }
+    explored_tile = Tile.at *coord
+    if explored_tile
+      explored_tile
+    else
+      child_index_order = []
+      parent = Tile.nearest(*coord, layer - 1)
+
+      t = if parent
+        index = parent.coord_children.index [*coord]
+        if index.nil?
+          binding.pry
+          raise "How did we get here?"
+        end
+        parent.explore_child index
+          else
+            raise 'parent does not exist'
+      #      keep traversing tree
+      end
+
+    #  call nearest on lower layer and explore children parent
+      t
     end
   end
 
@@ -100,6 +127,7 @@ class Tile < ActiveRecord::Base
     Tile.at *coord_child(index)
   end
 
+  # Tile splits evenly into 4 child tiles with indices (0..3) => (top-left, top-right, bottom-left, bottom-right)
   def explore_child(index)
     current = child index
     if current
@@ -143,6 +171,7 @@ class Tile < ActiveRecord::Base
     Set[*(0..3).map {|i| explore_child i }]
   end
 
+  # Am I child 0, 1, 2, or 3 of my parent tile?
   def which_child
     return nil if parent.nil?
     if coordA < parent.coordA
@@ -158,6 +187,10 @@ class Tile < ActiveRecord::Base
         3
       end
     end
+  end
+
+  def self.which_child
+
   end
 
   def coord_up
@@ -188,6 +221,26 @@ class Tile < ActiveRecord::Base
       raise 'child index must be in range [0, 4]'
     end
   end
+  def self.coord_child(a, b, layer)
+    tile_width = Tile.tile_width layer
+    offset = tile_width / 4.0
+    case index
+    when 0
+      [a - offset, b + offset]
+    when 1
+      [a + offset, b + offset]
+    when 2
+      [a - offset, b - offset]
+    when 3
+      [a + offset, b - offset]
+    else
+      raise 'child index must be in range [0, 4]'
+    end
+  end
+  def coord_children
+    (0..3).map {|i| coord_child i}
+  end
+
 
   def explore_up
     self.up || Tile.create do |tile|
@@ -409,13 +462,8 @@ class Tile < ActiveRecord::Base
       until queue.empty?
         current, radius_ = queue.shift
         next if radius_ == 0
-        # binding.pry
         visited << current.coord
         north = current.explore_up
-        # binding.pry
-        # binding.pry if north.nil?
-
-        #TODO Why is current.explore_up returning nil?????????????
 
         if !visited.include?(north.coord)
           queue << [north, radius_-1]

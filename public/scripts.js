@@ -33,91 +33,92 @@ function tileSizeAtLayer(layer) {
     return baseTileSize * Math.pow(0.5, layer - 1)
 }
 
-function coordAtMouse(mouseX, mouseY) {
-    scale = baseScale * zoom
-    // console.log("Complex Pixel: (" + (mouseX - offsetX) + ", " + (mouseY - offsetY) + ")");
-    x = (mouseX - offsetX - zoom * panX) / scale
-    y = (mouseY - offsetY - zoom * panY) * -1 / scale
-    return [x, y]
-}
+// function coordAtMouse(mouseX, mouseY) {
+//     scale = baseScale * zoom
+//     // console.log("Complex Pixel: (" + (mouseX - offsetX) + ", " + (mouseY - offsetY) + ")");
+//     x = (mouseX - offsetX - zoom * panX) / scale
+//     y = (mouseY - offsetY - zoom * panY) * -1 / scale
+//     return [x, y]
+// }
 
-
-function drawTile(tile) {
-    src = tile[2];
-    xPos = tile[0];
-    yPos = tile[1];
-    layer = tile[3] ? tile[3] : 1
-    tileSize = tileSizeAtLayer(layer)
-
-    ctx.strokeStyle = "#444"
-    ctx.beginPath();
-    ctx.lineWidth = 0.25;
-    x = (width / 2 - tileSize / 2) + xPos * baseScale
-    y = (height / 2 - tileSize / 2) - yPos * baseScale
-    ctx.rect(x, y, tileSize, tileSize);
-    ctx.stroke();
-}
-function paintTile(tile) {
-    src = tile[2];
-    xPos = tile[0];
-    yPos = tile[1];
-    layer = tile[3] ? tile[3] : 1
-    tileSize = tileSizeAtLayer(layer)
-
-    x = (width / 2 - tileSize / 2) + xPos * baseScale
-    y = (height / 2 - tileSize / 2) - yPos * baseScale
-
-    var img = document.getElementById(tile[2]);
-    ctx.drawImage(img, x, y, tileSize, tileSize)
-}
+//
+// function drawTile(tile) {
+//     xPos = tile[0];
+//     yPos = tile[1];
+//     layer = tile[3] ? tile[3] : 1
+//     tileSize = tileSizeAtLayer(layer)
+//
+//     ctx.strokeStyle = "#444"
+//     ctx.beginPath();
+//     ctx.lineWidth = 0.25;
+//     x = (width / 2 - tileSize / 2) + xPos * baseScale
+//     y = (height / 2 - tileSize / 2) - yPos * baseScale
+//     ctx.rect(x, y, tileSize, tileSize);
+//     ctx.stroke();
+// }
+// function paintTile(tile) {
+//     src = tile[2];
+//     if (src == null)
+//         return false;
+//     xPos = tile[0];
+//     yPos = tile[1];
+//     layer = tile[3] ? tile[3] : 1
+//     tileSize = tileSizeAtLayer(layer)
+//
+//     x = (width / 2 - tileSize / 2) + xPos * baseScale
+//     y = (height / 2 - tileSize / 2) - yPos * baseScale
+//
+//     var img = document.getElementById(tile[2]);
+//     ctx.drawImage(img, x, y, tileSize, tileSize)
+// }
 
 function printZoom() {
     document.getElementById('zoomFactor').textContent = zoom.toFixed(3);
     document.getElementById('currentLayer').textContent = currentLayer();
 }
-
-function zoomIn() {
-    max = 64.0
-    // prevent zooming in too much
-    if (zoom >= max)
-        return false;
-    zoom *= factor;
-
-    printZoom();
-    printPan();
-
-    offset = [offsetX - panX, offsetY - panY]
-    console.log("Using offset: " + offset);
-
-    x = offset[0]
-    y = offset[1]
-    ctx.translate(x, y);
-    ctx.scale(factor, factor);
-    // reverse translate to zoom point
-    ctx.translate(-x, -y);
-    draw();
-}
-function zoomOut() {
-    min = 0.25
-    // prevent zooming out too much
-    if (zoom <= min)
-        return false;
-    zoom /= factor;
-    // panX /= factor;
-    // panY /= factor;
-    printZoom();
-    printPan();
-
-    offset = [offsetX - panX, offsetY - panY]
-    console.log("Using offset: " + offset);
-
-    x = offset[0]
-    y = offset[1]
-    ctx.translate(x, y);
-    ctx.scale(1 / factor, 1 / factor);
-    ctx.translate(-x, -y);
-    draw();
-}
+//
+// function zoomIn() {
+//     max = 128.0
+//     // prevent zooming in too much
+//     if (zoom >= max)
+//         return false;
+//     zoom *= factor;
+//
+//     printZoom();
+//     printPan();
+//
+//     offset = [offsetX - panX, offsetY - panY]
+//     console.log("Using offset: " + offset);
+//
+//     x = offset[0]
+//     y = offset[1]
+//     ctx.translate(x, y);
+//     ctx.scale(factor, factor);
+//     // reverse translate to zoom point
+//     ctx.translate(-x, -y);
+//     draw();
+// }
+// function zoomOut() {
+//     min = 0.5
+//     // prevent zooming out too much
+//     if (zoom <= min)
+//         return false;
+//     zoom /= factor;
+//     // panX /= factor;
+//     // panY /= factor;
+//     printZoom();
+//     printPan();
+//
+//     offset = [offsetX - panX, offsetY - panY]
+//     console.log("Using offset: " + offset);
+//
+//     x = offset[0]
+//     y = offset[1]
+//     ctx.translate(x, y);
+//     ctx.scale(1 / factor, 1 / factor);
+//     ctx.translate(-x, -y);
+//     draw();
+// }
 function zoomReset() {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -299,7 +300,8 @@ function keyboardControls(event) {
 function tileImg(tile) {
     img = document.createElement('img')
     img.id = tile[2];
-    img.src = tile[4];
+    if (tile[4] != null)
+        img.src = tile[4];
     img.width = 200;
     img.height = 200;
     return img;

@@ -4,13 +4,15 @@ require 'pry-byebug'
 require 'fileutils'
 
 
-RESOLUTION = 200
+RESOLUTION = 400
 
-Tile.where(render_path: nil).map do |tile|
+unrendered = Tile.where(render_path: nil)
+puts "Rendering #{unrendered.size} tiles..."
+unrendered.map do |tile|
   directory = 'public/map'
   label = tile.coord.to_s.delete(' ').delete('[').delete(']').gsub(',','_').gsub('.','d')
   options = {
-      resolution: [200, 200],
+      resolution: [RESOLUTION, RESOLUTION],
       directory: directory,
       center: tile.coord,
       max_iterations: 1000,
