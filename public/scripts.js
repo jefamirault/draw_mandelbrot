@@ -182,7 +182,6 @@ function zoomInMouse() {
     // ctx.translate(-x, -y);
 
 
-    // debugger;
     // panX = panX + deltaPanX
     // panY = panY + deltaPanY
     // printPan();
@@ -266,37 +265,7 @@ function keyboardControls(event) {
                 break;
         }
     })
-};
-
-//
-// function requestTiles() {
-//     var xmlhttp = new XMLHttpRequest();
-//     var newTiles;
-//     xmlhttp.onreadystatechange = function() {
-//         if (xmlhttp.readyState == XMLHttpRequest.DONE) {   // XMLHttpRequest.DONE == 4
-//             if (xmlhttp.status == 200) {
-//                 newTiles = JSON.parse(xmlhttp.responseText)
-//                 // return newTiles;
-//                 registerTiles(newTiles);
-//                 // draw(newTiles)
-//                 // debugger;
-//                 // document.getElementById("myDiv").innerHTML = xmlhttp.responseText;
-//             }
-//             else if (xmlhttp.status == 400) {
-//                 alert('There was an error 400');
-//             }
-//             else {
-//                 alert('something else other than 200 was returned');
-//             }
-//         }
-//     };
-//     // TODO add focus and layer to url parameters GET "/tiles?focus=[0.0,0.0]&layer=1"
-//     xmlhttp.open("GET", "tiles?focus=[-0.25,0.25]&layer=2", true);
-//     // xmlhttp.open("GET", "tiles?focus=[0.0,0.0]&layer=1", true);
-//     xmlhttp.send();
-// }
-
-
+}
 function tileImg(tile) {
     img = document.createElement('img')
     img.id = tile[2];
@@ -308,12 +277,19 @@ function tileImg(tile) {
 }
 
 function registerTiles(tiles) {
-   for (i=0; i<tiles.length; i++)
-       registerTile(tiles[i]);
+    tile_ids = Object.keys(tiles);
+    for (i=0; i<tile_ids.length; i++) {
+        tile = tiles[tile_ids[i]]
+        registerTile(tile);
+    }
 }
 
 function registerTile(tile) {
     tiles_div = document.getElementById("tiles");
+    if (document.getElementById(tile[2])) {
+        // img already added to DOM
+        return false;
+    }
     img = tileImg(tile);
     tiles_div.appendChild(img);
     drawTile(tile);

@@ -43,17 +43,12 @@ class Tile < ActiveRecord::Base
   end
 
   def self.at(a, b, layer = nil)
-    if a == 0 && b == 0
+    if layer.nil?
+      Tile.where(coordA: a, coordB: b).first
+    elsif a == 0 && b == 0 && layer == 1
       Tile.origin
     else
-      exact = Tile.where(coordA: a, coordB: b).first
-      if exact
-        exact
-      elsif layer
-         Tile.nearest(a,b,layer)
-      else
-        nil
-      end
+      Tile.nearest(a,b,layer)
     end
   end
 

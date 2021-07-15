@@ -75,12 +75,16 @@
     zoom = 1.0
     lastLayer = 1
 
-    tiles = <%= tiles.map {|t| [*t.coord, t.id.to_s, t.layer, t.render_path]}.to_json %>
+    offsetY = canvas.height / 2
+    <% id_map = {} %>
+    <% tiles.each do |t| %>
+        <% id_map[t.id] = [*t.coord, t.id.to_s, t.layer, t.render_path] %>
+    <% end  %>
+    tiles = <%= id_map.to_json %>
 
     // Camera Offset
     // todo this should change when the user pans left/right/up/down
     offsetX = canvas.width / 2
-    offsetY = canvas.height / 2
 
 
     panY = 0
@@ -280,7 +284,6 @@
         // ctx.translate(-x, -y);
 
 
-        // debugger;
         // panX = panX + deltaPanX
         // panY = panY + deltaPanY
         // printPan();
@@ -332,16 +335,26 @@
     }
 
     function draw(tiles) {
+        // tile: [a, b, id, layer, path]
         clearCanvas();
 
         width = window.innerWidth;
         height = window.innerHeight;
 
-        //    call drawTile() on each elem of tiles
-        for (i=0;i<tiles.length;i++) {
-            if (tiles[i][2])
-                paintTile(tiles[i]);
-            drawTile(tiles[i]);
+
+
+        tiles_by_layer = Object.values(tiles).sort(function(a, b){
+            // tile[3] => layer
+            var x = a[3]; var y = b[3];
+            return ((x < y) ? -1 : ((x > y) ? 1 : 0));
+        });
+
+        tile_ids = Object.keys(tiles);
+        for (i=0; i<tiles_by_layer.length; i++) {
+            tile = tiles_by_layer[i];
+            if (tile[2])
+                paintTile(tile);
+            drawTile(tile);
         }
     }
 
@@ -358,13 +371,12 @@
             if (xmlhttp.readyState == XMLHttpRequest.DONE) {   // XMLHttpRequest.DONE == 4
                 if (xmlhttp.status == 200) {
                     newTiles = JSON.parse(xmlhttp.responseText)
-                    // return newTiles;
                     registerTiles(newTiles);
-                    debugger;
-                    tiles = tiles.concat(newTiles)
-                    // draw(newTiles)
-                    // debugger;
-                    // document.getElementById("myDiv").innerHTML = xmlhttp.responseText;
+                    for (i=0; i<newTiles.length; i++) {
+                        tile = newTiles[i];
+                        id = tile[2]
+                        tiles[id] = tile;
+                    }
                 }
                 else if (xmlhttp.status == 400) {
                     alert('There was an error 400');
