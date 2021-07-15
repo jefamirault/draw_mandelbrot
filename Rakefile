@@ -22,12 +22,16 @@ end
 namespace :migrate do
   task :up do
     require_relative 'db/migrate/20210704141603_create_tiles'
+    require_relative 'db/migrate/add_render_status_to_tiles'
     CreateTiles.migrate(:up)
+    AddRenderStatusToTiles.migrate :up
   end
 
   task :down do
     require_relative 'db/migrate/20210704141603_create_tiles'
+    require_relative 'db/migrate/add_render_status_to_tiles'
     CreateTiles.migrate(:down)
+    AddRenderStatusToTiles.migrate :down
   end
 end
 

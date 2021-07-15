@@ -28,6 +28,7 @@
         <button onclick="zoomReset()">Reset</button>
         <button onclick="zoomIn()">Zoom In</button>
         <button onclick="zoomOut()">Zoom Out</button>
+        <button onclick="exploreHere()">Explore Here</button>
 <!--        <button onclick="clearCanvas()">Clear</button>-->
     </div>
     <div id="debugControls">
@@ -72,6 +73,7 @@
 
     factor = 1.5 // how much to scale between zoom levels
     zoom = 1.0
+    lastLayer = 1
 
     tiles = <%= tiles.map {|t| [*t.coord, t.id.to_s, t.layer, t.render_path]}.to_json %>
 
@@ -93,9 +95,18 @@
     function coordAtMouse(mouseX, mouseY) {
         scale = baseScale * zoom
         // console.log("Complex Pixel: (" + (mouseX - offsetX) + ", " + (mouseY - offsetY) + ")");
-        x = (mouseX - offsetX - zoom * panX) / scale
-        y = (mouseY - offsetY - zoom * panY) * -1 / scale
-        return [x, y]
+        a = (mouseX - offsetX - zoom * panX) / scale
+        b = (mouseY - offsetY - zoom * panY) * -1 / scale
+        return [a, b]
+    }
+    function coordCenter() {
+        x = canvas.width / 2.0;
+        y = canvas.height / 2.0;
+        scale = baseScale * zoom
+        // console.log("Complex Pixel: (" + (mouseX - offsetX) + ", " + (mouseY - offsetY) + ")");
+        a = (x - offsetX - zoom * panX) / scale
+        b = (y - offsetY - zoom * panY) * -1 / scale
+        return [a, b]
     }
 
     // should use current_layer to emphasize closest tiles
@@ -142,7 +153,7 @@
         if (layer < currentLayer()) {
             //    shade more the further back the tile is
             diff = currentLayer() - layer
-            opacity = Math.min(0.125 * diff, 0.95)
+            opacity = Math.min(0.2 * diff, 0.9)
             ctx.fillStyle = "#777"
             ctx.beginPath();
             ctx.lineWidth = 0.5 ** (layer + 1);
@@ -159,7 +170,7 @@
     }
 
     function zoomIn() {
-        max = 2 ** 15
+        max = 2 ** 32
         // prevent zooming in too much
         if (zoom >= max)
             return false;
@@ -178,6 +189,12 @@
         // reverse translate to zoom point
         ctx.translate(-x, -y);
         draw(tiles);
+
+        if (currentLayer() != lastLayer) {
+            // TODO optimize tile requests
+            // exploreHere();
+            lastLayer = currentLayer();
+        }
     }
     function zoomOut() {
         min = 0.5
@@ -328,7 +345,13 @@
         }
     }
 
-    function requestTiles2() {
+    function exploreHere() {
+        layer = currentLayer();
+        // alert("Coord: [" + coordCenter() + "], Layer: " + layer);
+        requestTiles(coordCenter(), layer);
+    }
+    function requestTiles(focus, layer) {
+        path = "tiles?focus=[" + focus + "]&layer=" + layer;
         var xmlhttp = new XMLHttpRequest();
         var newTiles;
         xmlhttp.onreadystatechange = function() {
@@ -337,6 +360,7 @@
                     newTiles = JSON.parse(xmlhttp.responseText)
                     // return newTiles;
                     registerTiles(newTiles);
+                    debugger;
                     tiles = tiles.concat(newTiles)
                     // draw(newTiles)
                     // debugger;
@@ -350,388 +374,53 @@
                 }
             }
         };
-        // TODO add focus and layer to url parameters GET "/tiles?focus=[0.0,0.0]&layer=1"
-        xmlhttp.open("GET", "tiles?focus=[-0.25,0.25]&layer=2", true);
-        // xmlhttp.open("GET", "tiles?focus=[0.0,0.0]&layer=1", true);
+        xmlhttp.open("GET", path, true);
         xmlhttp.send();
+    }
+    function requestTiles2() {
+        requestTiles([-0.25,0.25], 2);
     }
     function requestTiles3() {
-        var xmlhttp = new XMLHttpRequest();
-        var newTiles;
-        xmlhttp.onreadystatechange = function() {
-            if (xmlhttp.readyState == XMLHttpRequest.DONE) {   // XMLHttpRequest.DONE == 4
-                if (xmlhttp.status == 200) {
-                    newTiles = JSON.parse(xmlhttp.responseText)
-                    // return newTiles;
-                    registerTiles(newTiles);
-                    tiles = tiles.concat(newTiles)
-                    // draw(newTiles)
-                    // debugger;
-                    // document.getElementById("myDiv").innerHTML = xmlhttp.responseText;
-                }
-                else if (xmlhttp.status == 400) {
-                    alert('There was an error 400');
-                }
-                else {
-                    alert('something else other than 200 was returned');
-                }
-            }
-        };
-        // TODO add focus and layer to url parameters GET "/tiles?focus=[0.0,0.0]&layer=1"
-        xmlhttp.open("GET", "tiles?focus=[-1.375,0.125]&layer=3", true);
-        // xmlhttp.open("GET", "tiles?focus=[0.0,0.0]&layer=1", true);
-        xmlhttp.send();
+        requestTiles([-1.375,0.125], 3);
     }
     function requestTiles4() {
-        var xmlhttp = new XMLHttpRequest();
-        var newTiles;
-        xmlhttp.onreadystatechange = function() {
-            if (xmlhttp.readyState == XMLHttpRequest.DONE) {   // XMLHttpRequest.DONE == 4
-                if (xmlhttp.status == 200) {
-                    newTiles = JSON.parse(xmlhttp.responseText)
-                    // return newTiles;
-                    registerTiles(newTiles);
-                    tiles = tiles.concat(newTiles)
-                    // draw(newTiles)
-                    // debugger;
-                    // document.getElementById("myDiv").innerHTML = xmlhttp.responseText;
-                }
-                else if (xmlhttp.status == 400) {
-                    alert('There was an error 400');
-                }
-                else {
-                    alert('something else other than 200 was returned');
-                }
-            }
-        };
-        // TODO add focus and layer to url parameters GET "/tiles?focus=[0.0,0.0]&layer=1"
-        xmlhttp.open("GET", "/tiles?focus=[-1.6875,%200.1875]&layer=4", true);
-        // xmlhttp.open("GET", "tiles?focus=[0.0,0.0]&layer=1", true);
-        xmlhttp.send();
+        requestTiles([-1.40625, 0.03125], 4);
     }
     function requestTiles5() {
-        var xmlhttp = new XMLHttpRequest();
-        var newTiles;
-        xmlhttp.onreadystatechange = function() {
-            if (xmlhttp.readyState == XMLHttpRequest.DONE) {   // XMLHttpRequest.DONE == 4
-                if (xmlhttp.status == 200) {
-                    newTiles = JSON.parse(xmlhttp.responseText)
-                    // return newTiles;
-                    registerTiles(newTiles);
-                    tiles = tiles.concat(newTiles)
-                    // draw(newTiles)
-                    // debugger;
-                    // document.getElementById("myDiv").innerHTML = xmlhttp.responseText;
-                }
-                else if (xmlhttp.status == 400) {
-                    alert('There was an error 400');
-                }
-                else {
-                    alert('something else other than 200 was returned');
-                }
-            }
-        };
-        // TODO add focus and layer to url parameters GET "/tiles?focus=[0.0,0.0]&layer=1"
-        xmlhttp.open("GET", "/tiles?focus=[-1.40625, 0.03125]&layer=5", true);
-        // xmlhttp.open("GET", "tiles?focus=[0.0,0.0]&layer=1", true);
-        xmlhttp.send();
+        requestTiles([-1.40625, 0.03125], 5);
     }
     function requestTiles6() {
-        var xmlhttp = new XMLHttpRequest();
-        var newTiles;
-        xmlhttp.onreadystatechange = function() {
-            if (xmlhttp.readyState == XMLHttpRequest.DONE) {   // XMLHttpRequest.DONE == 4
-                if (xmlhttp.status == 200) {
-                    newTiles = JSON.parse(xmlhttp.responseText)
-                    // return newTiles;
-                    registerTiles(newTiles);
-                    tiles = tiles.concat(newTiles)
-                    // draw(newTiles)
-                    // debugger;
-                    // document.getElementById("myDiv").innerHTML = xmlhttp.responseText;
-                }
-                else if (xmlhttp.status == 400) {
-                    alert('There was an error 400');
-                }
-                else {
-                    alert('something else other than 200 was returned');
-                }
-            }
-        };
-        // TODO add focus and layer to url parameters GET "/tiles?focus=[0.0,0.0]&layer=1"
-        xmlhttp.open("GET", "/tiles?focus=[-1.3916, 0.0182]&layer=6", true);
-        // xmlhttp.open("GET", "tiles?focus=[0.0,0.0]&layer=1", true);
-        xmlhttp.send();
+        requestTiles([-1.3916, 0.0182], 6);
     }
     function requestTiles7() {
-        var xmlhttp = new XMLHttpRequest();
-        var newTiles;
-        xmlhttp.onreadystatechange = function() {
-            if (xmlhttp.readyState == XMLHttpRequest.DONE) {   // XMLHttpRequest.DONE == 4
-                if (xmlhttp.status == 200) {
-                    newTiles = JSON.parse(xmlhttp.responseText)
-                    // return newTiles;
-                    registerTiles(newTiles);
-                    tiles = tiles.concat(newTiles)
-                    // draw(newTiles)
-                    // debugger;
-                    // document.getElementById("myDiv").innerHTML = xmlhttp.responseText;
-                }
-                else if (xmlhttp.status == 400) {
-                    alert('There was an error 400');
-                }
-                else {
-                    alert('something else other than 200 was returned');
-                }
-            }
-        };
-        // TODO add focus and layer to url parameters GET "/tiles?focus=[0.0,0.0]&layer=1"
-        xmlhttp.open("GET", "/tiles?focus=[-1.3833, 0.0232]&layer=7", true);
-        // xmlhttp.open("GET", "tiles?focus=[0.0,0.0]&layer=1", true);
-        xmlhttp.send();
+        requestTiles([-1.3833, 0.0232], 7);
     }
     function requestTiles8() {
-        var xmlhttp = new XMLHttpRequest();
-        var newTiles;
-        xmlhttp.onreadystatechange = function() {
-            if (xmlhttp.readyState == XMLHttpRequest.DONE) {   // XMLHttpRequest.DONE == 4
-                if (xmlhttp.status == 200) {
-                    newTiles = JSON.parse(xmlhttp.responseText)
-                    // return newTiles;
-                    registerTiles(newTiles);
-                    tiles = tiles.concat(newTiles)
-                    // draw(newTiles)
-                    // debugger;
-                    // document.getElementById("myDiv").innerHTML = xmlhttp.responseText;
-                }
-                else if (xmlhttp.status == 400) {
-                    alert('There was an error 400');
-                }
-                else {
-                    alert('something else other than 200 was returned');
-                }
-            }
-        };
-        // TODO add focus and layer to url parameters GET "/tiles?focus=[0.0,0.0]&layer=1"
-        xmlhttp.open("GET", "/tiles?focus=[-1.37927, 0.02663]&layer=8", true);
-        // xmlhttp.open("GET", "tiles?focus=[0.0,0.0]&layer=1", true);
-        xmlhttp.send();
+        requestTiles([-1.37927, 0.02663], 8);
     }
     function requestTiles9() {
-        var xmlhttp = new XMLHttpRequest();
-        var newTiles;
-        xmlhttp.onreadystatechange = function() {
-            if (xmlhttp.readyState == XMLHttpRequest.DONE) {   // XMLHttpRequest.DONE == 4
-                if (xmlhttp.status == 200) {
-                    newTiles = JSON.parse(xmlhttp.responseText)
-                    // return newTiles;
-                    registerTiles(newTiles);
-                    tiles = tiles.concat(newTiles)
-                    // draw(newTiles)
-                    // debugger;
-                    // document.getElementById("myDiv").innerHTML = xmlhttp.responseText;
-                }
-                else if (xmlhttp.status == 400) {
-                    alert('There was an error 400');
-                }
-                else {
-                    alert('something else other than 200 was returned');
-                }
-            }
-        };
-        // TODO add focus and layer to url parameters GET "/tiles?focus=[0.0,0.0]&layer=1"
-        xmlhttp.open("GET", "/tiles?focus=[-1.39615, 0.01749]&layer=9", true);
-        // xmlhttp.open("GET", "tiles?focus=[0.0,0.0]&layer=1", true);
-        xmlhttp.send();
+        requestTiles([-1.39615, 0.01749], 9);
     }
     function requestTiles10() {
-        var xmlhttp = new XMLHttpRequest();
-        var newTiles;
-        xmlhttp.onreadystatechange = function() {
-            if (xmlhttp.readyState == XMLHttpRequest.DONE) {   // XMLHttpRequest.DONE == 4
-                if (xmlhttp.status == 200) {
-                    newTiles = JSON.parse(xmlhttp.responseText)
-                    // return newTiles;
-                    registerTiles(newTiles);
-                    tiles = tiles.concat(newTiles)
-                    // draw(newTiles)
-                    // debugger;
-                    // document.getElementById("myDiv").innerHTML = xmlhttp.responseText;
-                }
-                else if (xmlhttp.status == 400) {
-                    alert('There was an error 400');
-                }
-                else {
-                    alert('something else other than 200 was returned');
-                }
-            }
-        };
-        // TODO add focus and layer to url parameters GET "/tiles?focus=[0.0,0.0]&layer=1"
-        xmlhttp.open("GET", "/tiles?focus=[-1.39553, 0.01861]&layer=10", true);
-        // xmlhttp.open("GET", "tiles?focus=[0.0,0.0]&layer=1", true);
-        xmlhttp.send();
+        requestTiles([-1.39553, 0.01861], 10);
     }
     function requestTiles11() {
-        var xmlhttp = new XMLHttpRequest();
-        var newTiles;
-        xmlhttp.onreadystatechange = function() {
-            if (xmlhttp.readyState == XMLHttpRequest.DONE) {   // XMLHttpRequest.DONE == 4
-                if (xmlhttp.status == 200) {
-                    newTiles = JSON.parse(xmlhttp.responseText)
-                    // return newTiles;
-                    registerTiles(newTiles);
-                    tiles = tiles.concat(newTiles)
-                    // draw(newTiles)
-                    // debugger;
-                    // document.getElementById("myDiv").innerHTML = xmlhttp.responseText;
-                }
-                else if (xmlhttp.status == 400) {
-                    alert('There was an error 400');
-                }
-                else {
-                    alert('something else other than 200 was returned');
-                }
-            }
-        };
-        // TODO add focus and layer to url parameters GET "/tiles?focus=[0.0,0.0]&layer=1"
-        xmlhttp.open("GET", "/tiles?focus=[-1.39495, 0.01808]&layer=11", true);
-        // xmlhttp.open("GET", "tiles?focus=[0.0,0.0]&layer=1", true);
-        xmlhttp.send();
+        requestTiles([-1.39495, 0.01808], 11);
     }
     function requestTiles12() {
-        var xmlhttp = new XMLHttpRequest();
-        var newTiles;
-        xmlhttp.onreadystatechange = function() {
-            if (xmlhttp.readyState == XMLHttpRequest.DONE) {   // XMLHttpRequest.DONE == 4
-                if (xmlhttp.status == 200) {
-                    newTiles = JSON.parse(xmlhttp.responseText)
-                    // return newTiles;
-                    registerTiles(newTiles);
-                    tiles = tiles.concat(newTiles)
-                    // draw(newTiles)
-                    // debugger;
-                    // document.getElementById("myDiv").innerHTML = xmlhttp.responseText;
-                }
-                else if (xmlhttp.status == 400) {
-                    alert('There was an error 400');
-                }
-                else {
-                    alert('something else other than 200 was returned');
-                }
-            }
-        };
-        // TODO add focus and layer to url parameters GET "/tiles?focus=[0.0,0.0]&layer=1"
-        xmlhttp.open("GET", "/tiles?focus=[-1.39528, 0.01833]&layer=12", true);
-        // xmlhttp.open("GET", "tiles?focus=[0.0,0.0]&layer=1", true);
-        xmlhttp.send();
+        requestTiles([-1.39528, 0.01833], 12);
     }
     function requestTiles13() {
-        var xmlhttp = new XMLHttpRequest();
-        var newTiles;
-        xmlhttp.onreadystatechange = function() {
-            if (xmlhttp.readyState == XMLHttpRequest.DONE) {   // XMLHttpRequest.DONE == 4
-                if (xmlhttp.status == 200) {
-                    newTiles = JSON.parse(xmlhttp.responseText)
-                    // return newTiles;
-                    registerTiles(newTiles);
-                    tiles = tiles.concat(newTiles)
-                    // draw(newTiles)
-                    // debugger;
-                    // document.getElementById("myDiv").innerHTML = xmlhttp.responseText;
-                }
-                else if (xmlhttp.status == 400) {
-                    alert('There was an error 400');
-                }
-                else {
-                    alert('something else other than 200 was returned');
-                }
-            }
-        };
-        // TODO add focus and layer to url parameters GET "/tiles?focus=[0.0,0.0]&layer=1"
-        xmlhttp.open("GET", "/tiles?focus=[-1.39514, 0.01843]&layer=13", true);
-        // xmlhttp.open("GET", "tiles?focus=[0.0,0.0]&layer=1", true);
-        xmlhttp.send();
+        requestTiles([-1.39514, 0.01843], 13);
     }
     function requestTiles14() {
-        var xmlhttp = new XMLHttpRequest();
-        var newTiles;
-        xmlhttp.onreadystatechange = function() {
-            if (xmlhttp.readyState == XMLHttpRequest.DONE) {   // XMLHttpRequest.DONE == 4
-                if (xmlhttp.status == 200) {
-                    newTiles = JSON.parse(xmlhttp.responseText)
-                    // return newTiles;
-                    registerTiles(newTiles);
-                    tiles = tiles.concat(newTiles)
-                    // draw(newTiles)
-                    // debugger;
-                    // document.getElementById("myDiv").innerHTML = xmlhttp.responseText;
-                }
-                else if (xmlhttp.status == 400) {
-                    alert('There was an error 400');
-                }
-                else {
-                    alert('something else other than 200 was returned');
-                }
-            }
-        };
-        // TODO add focus and layer to url parameters GET "/tiles?focus=[0.0,0.0]&layer=1"
-        xmlhttp.open("GET", "/tiles?focus=[-1.39520, 0.01848]&layer=14", true);
-        // xmlhttp.open("GET", "tiles?focus=[0.0,0.0]&layer=1", true);
-        xmlhttp.send();
+        requestTiles([-1.39520, 0.01848], 14);
     }
     function requestTiles15() {
-        var xmlhttp = new XMLHttpRequest();
-        var newTiles;
-        xmlhttp.onreadystatechange = function() {
-            if (xmlhttp.readyState == XMLHttpRequest.DONE) {   // XMLHttpRequest.DONE == 4
-                if (xmlhttp.status == 200) {
-                    newTiles = JSON.parse(xmlhttp.responseText)
-                    // return newTiles;
-                    registerTiles(newTiles);
-                    tiles = tiles.concat(newTiles)
-                    // draw(newTiles)
-                    // debugger;
-                    // document.getElementById("myDiv").innerHTML = xmlhttp.responseText;
-                }
-                else if (xmlhttp.status == 400) {
-                    alert('There was an error 400');
-                }
-                else {
-                    alert('something else other than 200 was returned');
-                }
-            }
-        };
-        // TODO add focus and layer to url parameters GET "/tiles?focus=[0.0,0.0]&layer=1"
-        xmlhttp.open("GET", "/tiles?focus=[-1.39523, 0.01852]&layer=15", true);
-        // xmlhttp.open("GET", "tiles?focus=[0.0,0.0]&layer=1", true);
-        xmlhttp.send();
+        requestTiles([-1.39523, 0.01852], 15);
     }
     function requestTiles16() {
-        var xmlhttp = new XMLHttpRequest();
-        var newTiles;
-        xmlhttp.onreadystatechange = function() {
-            if (xmlhttp.readyState == XMLHttpRequest.DONE) {   // XMLHttpRequest.DONE == 4
-                if (xmlhttp.status == 200) {
-                    newTiles = JSON.parse(xmlhttp.responseText)
-                    // return newTiles;
-                    registerTiles(newTiles);
-                    tiles = tiles.concat(newTiles)
-                    // draw(newTiles)
-                    // debugger;
-                    // document.getElementById("myDiv").innerHTML = xmlhttp.responseText;
-                }
-                else if (xmlhttp.status == 400) {
-                    alert('There was an error 400');
-                }
-                else {
-                    alert('something else other than 200 was returned');
-                }
-            }
-        };
-        // TODO add focus and layer to url parameters GET "/tiles?focus=[0.0,0.0]&layer=1"
-        xmlhttp.open("GET", "/tiles?focus=[-1.39522, 0.01857]&layer=16", true);
-        // xmlhttp.open("GET", "tiles?focus=[0.0,0.0]&layer=1", true);
-        xmlhttp.send();
+        requestTiles([-1.39522, 0.01857], 16);
     }
     // Display Mouse (x,y) position and Complex (ax+bi) Coordinates
     canvas.addEventListener('mousemove', e => {

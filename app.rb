@@ -16,7 +16,17 @@ get '/' do
   layer = params[:layer] || 1
   layer = layer.to_i  # convert from string
   center = Tile.at *focus, layer
-  radius = 6
+
+  radius = 5
+  if layer <= 1
+    radius = [2, radius].min
+  elsif layer <= 2
+    radius = [3, radius].min
+  elsif layer <= 3
+    radius = [4, radius].min
+  elsif layer <= 4
+    radius = [5, radius].min
+  end
 
   center.explore_neighbors radius
   tiles = center.connected_tiles(radius).map do |coord|
@@ -34,7 +44,16 @@ get '/tiles' do
 
   center = Tile.at *focus, layer
 
-  radius = 6
+  radius = 5
+  if layer <= 1
+    radius = [2, radius].min
+  elsif layer <= 2
+    radius = [3, radius].min
+  elsif layer <= 3
+    radius = [4, radius].min
+  elsif layer <= 4
+    radius = [5, radius].min
+  end
 
   center.explore_neighbors radius
   tiles = center.connected_tiles(radius).map do |coord|

@@ -9,6 +9,7 @@ class Tile < ActiveRecord::Base
   has_many :children, class_name: 'Tile', foreign_key: :parent_id
   validates_length_of :children, maximum: 4
 
+  enum render_status: [:unqueued, :queued, :processing, :complete], _default: :unqueued
 
   # Span of Complex Plane a single tile covers at Layer 1/Zoom 1.0
   TILE_SIZE = 1
