@@ -17,14 +17,12 @@ get '/' do
   layer = layer.to_i  # convert from string
   center = Tile.at *focus, layer
 
-  radius = 5
+  radius = 6
   if layer <= 1
-    radius = [2, radius].min
-  elsif layer <= 2
     radius = [3, radius].min
-  elsif layer <= 3
+  elsif layer <= 2
     radius = [4, radius].min
-  elsif layer <= 4
+  elsif layer <= 3
     radius = [5, radius].min
   end
 
@@ -44,14 +42,12 @@ get '/tiles' do
 
   center = Tile.at *focus, layer
 
-  radius = 5
+  radius = 6
   if layer <= 1
-    radius = [2, radius].min
-  elsif layer <= 2
     radius = [3, radius].min
-  elsif layer <= 3
+  elsif layer <= 2
     radius = [4, radius].min
-  elsif layer <= 4
+  elsif layer <= 3
     radius = [5, radius].min
   end
 

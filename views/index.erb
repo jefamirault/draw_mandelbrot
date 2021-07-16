@@ -31,23 +31,23 @@
         <button onclick="exploreHere()">Explore Here</button>
 <!--        <button onclick="clearCanvas()">Clear</button>-->
     </div>
-    <div id="debugControls">
-        <button onclick="requestTiles2()">2</button>
-        <button onclick="requestTiles3()">3</button>
-        <button onclick="requestTiles4()">4</button>
-        <button onclick="requestTiles5()">5</button>
-        <button onclick="requestTiles6()">6</button>
-        <button onclick="requestTiles7()">7</button>
-        <button onclick="requestTiles8()">8</button>
-        <button onclick="requestTiles9()">9</button>
-        <button onclick="requestTiles10()">10</button>
-        <button onclick="requestTiles11()">11</button>
-        <button onclick="requestTiles12()">12</button>
-        <button onclick="requestTiles13()">13</button>
-        <button onclick="requestTiles14()">14</button>
-        <button onclick="requestTiles15()">15</button>
-        <button onclick="requestTiles16()">16</button>
-    </div>
+<!--    <div id="debugControls">-->
+<!--        <button onclick="requestTiles2()">2</button>-->
+<!--        <button onclick="requestTiles3()">3</button>-->
+<!--        <button onclick="requestTiles4()">4</button>-->
+<!--        <button onclick="requestTiles5()">5</button>-->
+<!--        <button onclick="requestTiles6()">6</button>-->
+<!--        <button onclick="requestTiles7()">7</button>-->
+<!--        <button onclick="requestTiles8()">8</button>-->
+<!--        <button onclick="requestTiles9()">9</button>-->
+<!--        <button onclick="requestTiles10()">10</button>-->
+<!--        <button onclick="requestTiles11()">11</button>-->
+<!--        <button onclick="requestTiles12()">12</button>-->
+<!--        <button onclick="requestTiles13()">13</button>-->
+<!--        <button onclick="requestTiles14()">14</button>-->
+<!--        <button onclick="requestTiles15()">15</button>-->
+<!--        <button onclick="requestTiles16()">16</button>-->
+<!--    </div>-->
     <div id="moreControls">
         <div>
             <button onclick="panUp()">Pan Up</button>
@@ -71,7 +71,7 @@
     width = window.innerWidth;
     height = window.innerHeight;
 
-    factor = 1.5 // how much to scale between zoom levels
+    factor = 2 // how much to scale between zoom levels
     zoom = 1.0
     lastLayer = 1
 
@@ -94,6 +94,48 @@
     baseScale = 200.0
 
     baseTileSize = 200
+
+    ////////////////////////////
+    // Click + Drag to Scroll //
+    ////////////////////////////
+
+    var lastX=canvas.width/2, lastY=canvas.height/2;
+    var dragStart,dragged;
+    canvas.addEventListener('mousedown',function(evt){
+        document.body.style.mozUserSelect = document.body.style.webkitUserSelect = document.body.style.userSelect = 'none';
+        lastX = evt.offsetX || (evt.pageX - canvas.offsetLeft);
+        lastY = evt.offsetY || (evt.pageY - canvas.offsetTop);
+        dragStart = transformedPoint(lastX,lastY);
+        // dragStart = [lastX,lastY];
+        dragged = false;
+    },false);
+    canvas.addEventListener('mousemove',function(evt){
+        lastX = evt.offsetX || (evt.pageX - canvas.offsetLeft);
+        lastY = evt.offsetY || (evt.pageY - canvas.offsetTop);
+        dragged = true;
+        if (dragStart){
+            var pt = transformedPoint(lastX,lastY);
+            // var pt = [lastX,lastY];
+            var delta = [(pt[0]-dragStart[0]), (pt[1]-dragStart[1])];
+            // debugger;
+            pan(delta[0], delta[1]);
+            console.log("x,y: [" + dragStart +  "] => x,y: [" + pt + "]");
+            console.log("x,y: [" + [delta[0], delta[1]] +  "]");
+            draw(tiles);
+        }
+    },false);
+
+    canvas.addEventListener('mouseup',function(evt){
+        dragStart = null;
+        // single-click to zoom
+        // if (!dragged) zoom(evt.shiftKey ? -1 : 1 );
+    },false);
+
+
+    function transformedPoint(x, y) {
+        // return [(x - panX) / zoom, (y - panY) / zoom];
+        return [(x / zoom - panX), (y / zoom - panY)];
+    }
 
 
     function coordAtMouse(mouseX, mouseY) {
@@ -195,8 +237,7 @@
         draw(tiles);
 
         if (currentLayer() != lastLayer) {
-            // TODO optimize tile requests
-            // exploreHere();
+            exploreHere();
             lastLayer = currentLayer();
         }
     }
@@ -220,6 +261,11 @@
         ctx.scale(1 / factor, 1 / factor);
         ctx.translate(-x, -y);
         draw(tiles);
+
+        if (currentLayer() != lastLayer) {
+            // exploreHere();
+            lastLayer = currentLayer();
+        }
     }
     function zoomReset() {
         ctx.setTransform(1, 0, 0, 1, 0, 0);

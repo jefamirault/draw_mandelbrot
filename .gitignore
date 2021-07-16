@@ -1,3 +1,6 @@
 .idea
 public/map
 public/data
+db/development.sqlite3
+db/test.sqlite3
+db/production.sqlite3
